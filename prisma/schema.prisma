@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String?
+  email        String?       @unique
+  image        String?
+  skills       Skill[]       @relation("UserSkills")
+  bookings     Booking[]     @relation("UserBookings")
+  reviews      Review[]      @relation("UserReviews")
+  messages     Message[]     @relation("UserMessages")
+  barterOffers BarterOffer[] @relation("UserBarterOffers")
+  createdAt    DateTime      @default(now())
+  Message      Message[]
+}
+
+model Skill {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  paymentType PaymentType
+  priceCents  Int? // Для MONEY и BOTH
+  ownerId     String
+  owner       User          @relation("UserSkills", fields: [ownerId], references: [id])
+  categoryId  String?
+  category    Category?     @relation(fields: [categoryId], references: [id])
+  bookings    Booking[]     @relation("SkillBookings")
+  reviews     Review[]      @relation("SkillReviews")
+  images      SkillImage[]
+  createdAt   DateTime      @default(now())
+  BarterOffer BarterOffer[]
+}
+
+model Category {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  skills Skill[]
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  skillId       String
+  skill         Skill         @relation("SkillBookings", fields: [skillId], references: [id])
+  buyerId       String
+  buyer         User          @relation("UserBookings", fields: [buyerId], references: [id])
+  status        BookingStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(NOT_PAID)
+  barterOfferId String?
+  barterOffer   BarterOffer?  @relation(fields: [barterOfferId], references: [id])
+  logs          BookingLog[]
+  createdAt     DateTime      @default(now())
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String
+  userId    String
+  user      User     @relation("UserReviews", fields: [userId], references: [id])
+  skillId   String
+  skill     Skill    @relation("SkillReviews", fields: [skillId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model BarterOffer {
+  id             String    @id @default(cuid())
+  proposerId     String
+  proposer       User      @relation("UserBarterOffers", fields: [proposerId], references: [id])
+  offeredSkillId String?
+  offeredSkill   Skill?    @relation(fields: [offeredSkillId], references: [id])
+  description    String?
+  createdAt      DateTime  @default(now())
+  Booking        Booking[]
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     User     @relation("UserMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation(fields: [receiverId], references: [id])
+  content    String
+  createdAt  DateTime @default(now())
+}
+
+model SkillImage {
+  id      String @id @default(cuid())
+  skillId String
+  skill   Skill  @relation(fields: [skillId], references: [id])
+  url     String
+}
+
+model BookingLog {
+  id        String        @id @default(cuid())
+  bookingId String
+  booking   Booking       @relation(fields: [bookingId], references: [id])
+  status    BookingStatus
+  createdAt DateTime      @default(now())
+}
+
+enum PaymentType {
+  MONEY
+  BARTER
+  BOTH
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  NOT_PAID
+  PAID
+  BARTER_EXCHANGED
+}
