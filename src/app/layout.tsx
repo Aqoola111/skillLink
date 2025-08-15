@@ -1,3 +1,4 @@
+import {RootProvider} from "@/components/providers/root-provider";
 import type {Metadata} from "next";
 import {Inter} from "next/font/google";
 import "./globals.css";
@@ -24,7 +25,9 @@ export default function RootLayout({
 		<body
 			className={`${inter.className} min-h-screen antialiased`}
 		>
-		{children}
+		<RootProvider>
+			{children}
+		</RootProvider>
 		</body>
 		</html>
 	);
