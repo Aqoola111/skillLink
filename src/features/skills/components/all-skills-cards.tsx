@@ -4,7 +4,7 @@ import {getInfiniteSkills} from "@/features/skills/actions";
 import {SkillsContainer} from "@/features/skills/components/skills-container";
 import {useInfiniteQuery} from "@tanstack/react-query";
 
-const SkillsCards = () => {
+const AllSkillsCards = () => {
 	
 	const {data, fetchNextPage, hasNextPage, isFetchingNextPage} = useInfiniteQuery({
 		queryKey: ["skills"],
@@ -20,4 +20,4 @@ const SkillsCards = () => {
 		</SkillsContainer>
 	)
 }
-export default SkillsCards
+export default AllSkillsCards

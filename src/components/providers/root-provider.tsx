@@ -1,3 +1,4 @@
+import {QueryProvider} from "@/components/providers/query-provider";
 import {Toaster} from "@/components/ui/sonner";
 import {SessionProvider} from "next-auth/react";
 
@@ -9,10 +10,12 @@ export const RootProvider = ({children}: RootProviderProps) => {
 	
 	return (
 		<>
-			<SessionProvider>
-				<Toaster richColors/>
-				{children}
-			</SessionProvider>
+			<QueryProvider>
+				<SessionProvider>
+					<Toaster richColors/>
+					{children}
+				</SessionProvider>
+			</QueryProvider>
 		</>
 	)
 };

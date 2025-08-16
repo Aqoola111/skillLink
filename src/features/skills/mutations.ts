@@ -1,7 +1,12 @@
-interface ${NAME.toCamelCase().capitalize()}Props {
-  // define props here
-}
+import {useMutation} from '@tanstack/react-query'
+import {createSkill} from './actions'
+import {CreateSkillFormSchema} from './schemas'
 
-export const ${NAME.toCamelCase().capitalize()} = ({}: ${NAME.toCamelCase().capitalize()}Props) => {
-  return <div>${NAME.toCamelCase().capitalize()}</div>;
-};
+export function useCreateSkillMutation() {
+	return useMutation({
+		mutationFn: async (values: CreateSkillFormSchema) => {
+			console.log(typeof values.price)
+			return await createSkill(values)
+		}
+	})
+}

@@ -1,11 +1,11 @@
+import {CreateSkillForm} from "@/features/skills/components/create-skill-form";
 
-
-interface PageProps {
-  // define props here
-}
-
-export const Page = ({}: PageProps) => {
- return (
-		<div>Page</div>
+const CreateSkillPage = () => {
+	
+	return (
+		<div className='flex items-center justify-center flex-1'>
+			<CreateSkillForm/>
+		</div>
 	)
-};
+}
+export default CreateSkillPage
