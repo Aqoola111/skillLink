@@ -79,6 +79,7 @@ model Skill {
   price              Float?
   paymentType        PaymentType            @default(MONEY)
   owner              User                   @relation("UserSkills", fields: [ownerId], references: [id])
+  icon               String?
   ownerId            String
   bookings           Booking[]
   reviews            Review[]

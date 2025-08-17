@@ -13,56 +13,48 @@ export const skillSchema = z.object({
 	updatedAt: z.date().default(() => new Date())
 });
 
+export const MAX_TAGS = 3;
+
 export const createSkillFormSchema = z.object({
-		title: z.string().min(1, "Title is required"),
-		description: z.string().min(1, "Description is required"),
-		price: z.number(), // строка или null
-		paymentType: z.enum(PaymentType),
-		ownerId: z.string()
-	}).superRefine((data, ctx) => {
-		if (data.paymentType === 'MONEY' || data.paymentType === 'BOTH') {
-			if (data.price !== undefined && data.price <= 0) {
+	title: z.string().min(1, "Title is required").max(100, "Title must be 100 characters or less"),
+	description: z.string().min(1, "Description is required").max(256, "Description must be 256 characters or less"),
+	paymentType: z.enum(PaymentType),
+	icon: z.string().nullable().optional(),
+	price: z.number().positive().nullable(),
+	categoryId: z.string().nullable().optional(),
+	tagIds: z.array(z.object({id: z.string()})).max(MAX_TAGS, `You can select up to ${MAX_TAGS} tags`),
+})
+	.superRefine((data, ctx) => {
+		// This validation logic correctly checks for price based on paymentType
+		if (data.paymentType === "MONEY" || data.paymentType === "BOTH") {
+			if (data.price == null || data.price <= 0) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: "Price must be greater than 0 when payment type is BARTER or BOTH",
-				})
+					path: ["price"],
+					code: "custom",
+					message: "Price is required and must be positive for this payment type.",
+				});
 			}
 		}
-	})
-;
-
-// Схема для сервера (число | null)
-export const createSkillSchema = createSkillFormSchema
-	.extend({
-		price: z
-			.string()
-			.nullable()
-			.transform((val) => {
-				if (!val) return null;
-				const parsed = parseFloat(val);
-				return isNaN(parsed) ? null : parsed;
-			})
-	})
-	.refine(
-		(data) =>
-			!(
-				data.paymentType === PaymentType.MONEY ||
-				data.paymentType === PaymentType.BOTH
-			) || (data.price !== null && data.price > 0),
-		{
-			message: "Price must be greater than 0 when payment type is MONEY or BOTH",
-			path: ["price"]
+		// This check is also correct, ensuring price is not set for BARTER
+		if (data.paymentType === "BARTER" && data.price != null) {
+			ctx.addIssue({
+				path: ["price"],
+				code: "custom",
+				message: "Price should not be set for BARTER payment type.",
+			});
 		}
-	);
+	});
 
 export type CreateSkillFormSchema = z.infer<typeof createSkillFormSchema>; // для useForm
 
 export const createSkillDefaultValues: CreateSkillFormSchema = {
 	description: '',
-	ownerId: '',
 	paymentType: PaymentType.BARTER,
 	price: 0,
-	title: ''
+	title: '',
+	tagIds: [],
+	icon: '',
+	categoryId: null
 }
 
 export const updateSkillSchema = skillSchema.omit({
@@ -70,6 +62,4 @@ export const updateSkillSchema = skillSchema.omit({
 	createdAt: true,
 })
 
-
-export type CreateSkillSchema = z.infer<typeof createSkillSchema>;
 export type UpdateSkillSchema = z.infer<typeof updateSkillSchema>;

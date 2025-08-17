@@ -15,7 +15,7 @@ export const UserSkillsCards = () => {
 	
 	const data = useQuery({
 		queryKey: ['skills', session.user.id],
-		queryFn: () => getSkillByOwnerId(session.user.id, true),
+		queryFn: () => getSkillByOwnerId(session.user.id),
 		enabled: !!session?.user.id,
 	})
 	

@@ -26,10 +26,15 @@ export const getInfiniteSkills = async (cursor?: string) => {
 	}
 }
 
-export const getSkillByOwnerId = async (id: string, includeOwner: boolean) => {
+export const getSkillByOwnerId = async (id: string) => {
 	return prisma.skill.findMany({
 		where: {ownerId: id},
-		include: includeOwner ? {owner: true} : undefined,
+		include: {
+			owner: {select: {id: true, name: true, image: true}},
+			Category: {select: {id: true, name: true}},
+			tags: {select: {id: true, name: true}},
+			_count: {select: {reviews: true, bookings: true, tags: true}},
+		},
 	});
 }
 
@@ -55,6 +60,11 @@ export const createSkill: SubmitHandler<CreateSkillFormSchema> = async (data) =>
 			title: data.title,
 			description: data.description,
 			price: data.price ?? null,
+			categoryId: data.categoryId ?? null,
+			tags: {
+				connect: data.tagIds.map(tag => ({id: tag.id}))
+			},
+			icon: data.icon ?? null,
 			paymentType: data.paymentType,
 			ownerId: userExists.id
 		}

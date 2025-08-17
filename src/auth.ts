@@ -2,7 +2,7 @@ import {signInSchema} from "@/features/auth/schemas";
 import {prisma} from "@/lib/prisma"
 import Credentials from "@auth/core/providers/credentials"
 import {PrismaAdapter} from "@auth/prisma-adapter"
-import NextAuth from "next-auth"
+import NextAuth, {CredentialsSignin} from "next-auth"
 
 const adapter = PrismaAdapter(prisma)
 
@@ -22,9 +22,7 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
 					where: {email: validatedCredentials.email}
 				})
 				
-				if (!user) {
-					throw new Error('User not found')
-				}
+				if (!user) throw new CredentialsSignin("USER_NOT_FOUND");
 				
 				
 				return user
