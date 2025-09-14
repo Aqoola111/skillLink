@@ -1,8 +1,14 @@
 'use server'
 
 import {auth} from "@/auth";
-import {createSkillFormSchema, CreateSkillFormSchema} from "@/features/skills/schemas";
+import {
+	createSkillFormSchema,
+	CreateSkillFormSchema,
+	updateSkillSchema,
+	UpdateSkillSchema
+} from "@/features/skills/schemas";
 import {prisma} from "@/lib/prisma"
+import {Prisma} from "@prisma/client";
 import {SubmitHandler} from "react-hook-form";
 
 export const getSkills = async () => {
@@ -76,5 +82,74 @@ export const createSkill: SubmitHandler<CreateSkillFormSchema> = async (data) =>
 	
 	
 	return skill;
+}
+
+export const deleteSkill = async (id: string) => {
+	
+	const user = await auth()
+	if (!user?.user) {
+		throw new Error("You must be signed in to delete a skill")
+	}
+	
+	try {
+		return await prisma.skill.delete({
+			where: {id, ownerId: user.user.id}
+		});
+	} catch (error) {
+		throw new Error("Failed to delete skill" + (error as Error).message)
+	}
+}
+
+export const updateSkill = async (id: string, data: UpdateSkillSchema) => {
+	const user = await auth()
+	if (!user?.user) {
+		throw new Error("You must be signed in to update a skill")
+	}
+	const validatedData = updateSkillSchema.parse(data);
+	
+	const existingSkill = await prisma.skill.findUnique({
+		where: {id}
+	})
+	
+	if (!existingSkill) {
+		throw new Error("Skill not found")
+	}
+	
+	if (existingSkill.ownerId !== user.user.id) {
+		throw new Error("You do not have permission to update this skill")
+	}
+	
+	const patch: Prisma.SkillUpdateInput = {
+		...(data.title !== undefined && {title: validatedData.title}),
+		...(data.description !== undefined && {description: validatedData.description}),
+		...(data.paymentType !== undefined && {paymentType: validatedData.paymentType}),
+		...(data.icon !== undefined && {icon: validatedData.icon}),
+		...(data.price !== undefined && {price: validatedData.price}),
+		
+		...(data.categoryId !== undefined &&
+			(data.categoryId === null
+				? {Category: {disconnect: true}}
+				: {Category: {connect: {id: data.categoryId}}})
+		),
+		
+		...(data.tagIds !== undefined && {
+			tags: {set: validatedData.tagIds.map(({id}) => ({id}))},
+		}),
+		...(data.allowedCategories !== undefined && {
+			allowedCategories: {
+				deleteMany: {},
+				create: data.allowedCategories.map(({id}) => ({
+					category: {connect: {id}},
+				})),
+			},
+		})
+	};
+	
+	
+	try {
+		return await prisma.skill.update({where: {id}, data: patch});
+	} catch (error) {
+		throw new Error("Failed to update skill" + (error as Error).message)
+	}
 }
 

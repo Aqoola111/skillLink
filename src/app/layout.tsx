@@ -1,3 +1,4 @@
+import {ConfirmDialog} from "@/components/layout/ConfirmDialog";
 import {RootProvider} from "@/components/providers/root-provider";
 import type {Metadata} from "next";
 import {Inter} from "next/font/google";
@@ -26,6 +27,7 @@ export default function RootLayout({
 			className={`${inter.className} min-h-screen antialiased`}
 		>
 		<RootProvider>
+			<ConfirmDialog/>
 			{children}
 		</RootProvider>
 		</body>

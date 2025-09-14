@@ -15,8 +15,8 @@ const Page = async () => {
 	}
 	
 	await queryClient.prefetchQuery({
-		queryKey: ['skills', session.user.id],
-		queryFn: () => getSkillByOwnerId(session.user.id, true),
+		queryKey: ['skills', session?.user.id],
+		queryFn: () => getSkillByOwnerId(session.user.id),
 	})
 	
 	return (

@@ -1,9 +1,13 @@
+import {UserInfo} from "@/components/shared/user-info";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
-import {Card, CardContent, CardFooter, CardHeader} from "@/components/ui/card";
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
-import {Prisma, Skill} from "@prisma/client";
-import {FiEdit2, FiStar, FiTrash2} from "react-icons/fi";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
+import {Prisma} from "@prisma/client";
+import {DollarSign} from "lucide-react";
+import {CgArrowsExchange, CgDollar} from "react-icons/cg";
+import {FiEdit2, FiTrash2} from "react-icons/fi";
 
 export const skillCardInclude = Prisma.validator<Prisma.SkillInclude>()({
 	owner: {
@@ -27,40 +31,66 @@ export type SkillWithRelations = Prisma.SkillGetPayload<{
 
 interface SkillCardProps {
 	skill: SkillWithRelations;
-	onEdit?: (skill: Skill) => void;
-	onDelete?: (skill: Skill) => void;
+	onEdit?: (skill: SkillWithRelations) => void;
+	onDelete?: (id: string) => void;
 }
 
 export const SkillCard = ({skill, onEdit, onDelete}: SkillCardProps) => {
 	return (
 		<Card className="w-full md:w-[400px] border shadow-sm hover:shadow-md transition-shadow">
-			<CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-				{
-					skill.Category && (
-						<Badge>
-							{skill.Category.name}
-						</Badge>
-					)
-				}
+			<CardHeader className="flex flex-col gap-2 text-2xl">
+				<div className='flex itcems-center gap-2'>
+					{
+						skill.Category && (
+							<Badge>
+								{skill.Category.name}
+							</Badge>
+						)
+						
+					}
+					<Tooltip>
+						<TooltipTrigger>
+							<Badge variant='outline'>
+								{skill.paymentType === 'MONEY' && (
+									<>
+										<TooltipContent>
+											For Money
+										</TooltipContent>
+										<DollarSign/>
+									</>
+								)}
+								{skill.paymentType === 'BOTH' && (
+									<>
+										<TooltipContent>
+											For Barter and Money
+										</TooltipContent>
+										<CgArrowsExchange className='!size-5'/>
+										/
+										<CgDollar className='!size-5'/>
+									</>
+								)}
+								{skill.paymentType === 'MONEY' && (
+									<>
+										<TooltipContent>
+											Barter
+										</TooltipContent>
+										<DollarSign/>
+									</>
+								)}
+							</Badge>
+						</TooltipTrigger>
+					</Tooltip>
+				</div>
+				<CardTitle>
+					{skill.title}
+				</CardTitle>
+				<CardDescription>
+					{skill.description || 'No description provided.'}
+				</CardDescription>
 			</CardHeader>
 			<Separator/>
 			<CardContent className="pt-4">
-				{
-					skill.owner ? (
-						<div className="text-sm text-muted-foreground flex gap-2">
-							<span className="font-semibold">{skill.owner.name}</span>
-							<div className='flex items-center'>
-								{Array.from({length: 10}).map((_, index) => (
-									<FiStar className='text-primary' key={index}/>
-								))}
-							</div>
-						</div>
-					) : (
-						<div className="text-sm text-muted-foreground">
-							<span>Owner information not available</span>
-						</div>
-					)
-				}
+				<UserInfo name={skill.owner.name}/>
 			</CardContent>
 			<CardFooter className='w-full'>
 				<div className="flex gap-1">
@@ -75,7 +105,7 @@ export const SkillCard = ({skill, onEdit, onDelete}: SkillCardProps) => {
 					<Button
 						variant="ghost"
 						size="icon"
-						onClick={() => onDelete?.(skill)}
+						onClick={() => onDelete?.(skill.id)}
 						title="Delete"
 					>
 						<FiTrash2 className="w-4 h-4 text-red-500"/>

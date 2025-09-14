@@ -3,6 +3,7 @@
 import {Badge} from '@/components/ui/badge'
 import {FormControl, FormField, FormItem, FormMessage} from '@/components/ui/form'
 import {cn} from '@/lib/utils'
+import {useEffect} from "react";
 import {type Control, type FieldValues, type Path, useController} from 'react-hook-form'
 
 type Option = { id: string; name: string }
@@ -13,6 +14,7 @@ type TagPickerProps<FV extends FieldValues, N extends Path<FV>> = {
 	label: string
 	options: Option[]
 	max?: number
+	selected?: { id: string }[]
 }
 
 export function TagPickerSimple<FV extends FieldValues, N extends Path<FV>>({
@@ -20,23 +22,44 @@ export function TagPickerSimple<FV extends FieldValues, N extends Path<FV>>({
 																				name,
 																				label,
 																				options,
+																				selected,
 																				max = Infinity,
 																			}: TagPickerProps<FV, N>) {
 	const {field} = useController({control, name})
 	
 	
-	const value = (field.value as Array<{ id: string }> | undefined) ?? []
-	const selectedIds = new Set(value.map(v => v.id))
+	const value = (field.value as { id: string }[] | undefined) ?? []
+	useEffect(() => {
+		if (selected && selected.length > 0) {
+			let current = value
+			selected.forEach(obj => {
+				if (!current.some(c => c.id === obj.id)) {
+					current = [...current, {id: obj.id}]
+				}
+			})
+			field.onChange(current)
+		}
+	}, [selected])
+	
+	
+	const selectedIds = new Set(
+		(value as Array<string | { id: string }>).map(v =>
+			typeof v === 'string' ? v : v.id
+		)
+	)
+	
 	
 	const toggle = (opt: Option) => {
 		const exists = selectedIds.has(opt.id)
+		
 		if (exists) {
-			field.onChange(value.filter(v => v.id !== opt.id))
+			field.onChange(value.filter(obj => obj.id !== opt.id))
 		} else {
 			if (value.length >= max) return
 			field.onChange([...value, {id: opt.id}])
 		}
 	}
+	
 	
 	return (
 		<div className="flex flex-col gap-2">
